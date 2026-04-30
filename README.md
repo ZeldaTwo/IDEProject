@@ -60,24 +60,18 @@ flowchart TD
         ST{{"Flux (Stream)"}}:::stream
     end
 
-    %% NODES
-    IoT{{<b>Bracelets Connectés</b><br/><small><i>TS, ID, Lat/Lon, Faction, Status</i></small>}}:::stream
-    
-    Kafka{{<b>Apache Kafka</b><br/><small>Topic: positions<br/>Partition: device_id</small>}}:::stream
+    IoT{{"Bracelets Connectés\nTS · ID · Lat/Lon · Faction · Status"}}:::stream
+    Kafka{{"Apache Kafka\nTopic: positions · Partition: device_id"}}:::stream
+    SS["Spark Streaming\nCalcul de proximité temps-réel"]:::process
+    SB["Spark SQL\nCalcul de classements & stats"]:::process
+    Bronze[("Data Lake — Bronze\nHDFS/S3 · Raw Avro")]:::storage
+    Silver[("Data Lake — Silver\nParquet · Partitionné · Curated")]:::storage
+    Gold[("Data Lake — Gold\nParquet · Agrégats SQL-ready")]:::storage
+    Redis[("Redis\nÉtat Joueurs Actifs")]:::storage
+    Push["Push Notification\nAlerte combat mobile"]:::process
+    Mobile["App Mobile\nPropositions de combat"]:::process
+    Dashboard["Dashboard Analytics\nStats factions · Historique"]:::process
 
-    SS["<b>Spark Streaming</b><br/><small>Calcul de proximité temps-réel</small>"]:::process
-    SB["<b>Spark SQL</b><br/><small>Calcul de classements & stats</small>"]:::process
-
-    Bronze[(<b>Data Lake — Bronze</b><br/><small>HDFS/S3 · Format: Raw Avro msg</small>)]:::storage
-    Silver[(<b>Data Lake — Silver</b><br/><small>Parquet · Partitionné / Curated</small>)]:::storage
-    Gold[(<b>Data Lake — Gold</b><br/><small>Parquet · Agrégats SQL-ready</small>)]:::storage
-    Redis[(<b>Redis</b><br/><small>État Joueurs Actifs </small>)]:::storage
-
-    Push["<b>Push Notification</b><br/><small>Alerte combat mobile</small>"]:::process
-    Mobile["<b>App Mobile</b><br/><small>Propositions de combat</small>"]:::process
-    Dashboard["<b>Dashboard Analytics</b><br/><small>Stats factions</small>"]:::process
-
-    %% LINKS
     IoT -->|Avro msgs| Kafka
     Kafka -->|Consume| SS
     Kafka -->|Raw Data| Bronze
@@ -90,7 +84,6 @@ flowchart TD
     Gold --> Dashboard
     Redis --> Mobile
 
-    %% STYLES
     classDef storage fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
     classDef process fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c
     classDef stream fill:#fffde7,stroke:#f9a825,stroke-width:2px,color:#e65100

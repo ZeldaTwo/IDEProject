@@ -2,7 +2,7 @@
 
 ## Contexte du projet
 
-Le **Global Fighting Guild Tournament** est un jeu de combat en temps réel reposant sur des **bracelets IoT connectés** portés par les joueurs. Chaque bracelet émet en continu des données de positionnement GPS ainsi que des métadonnées (identifiant du device, faction du joueur, statut). Une application est également installée sur le téléphone de l'utilisateur, permettant de le notifier lorsqu'un combat est déclenché.er
+Le **Global Fighting Guild Tournament** est un jeu de combat en temps réel reposant sur des **bracelets IoT connectés** portés par les joueurs. Chaque bracelet émet en continu des données de positionnement GPS ainsi que des métadonnées (identifiant du device, faction du joueur, statut). Une application est également installée sur le téléphone de l'utilisateur, permettant de le notifier lorsqu'un combat est déclenché
 
 L'enjeu de l'architecture est multiple :
 

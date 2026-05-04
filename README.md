@@ -63,11 +63,13 @@ flowchart TD
     IoT{{"Bracelets Connectés\nTS · ID · Lat/Lon · Faction · Status"}}:::stream
     Kafka{{"Apache Kafka\nTopic: positions · Partition: device_id"}}:::stream
     SS["Spark Streaming\nCalcul de proximité temps-réel"]:::process
+    ETL1["Spark — Bronze vers Silver\nSuppression des doublons · Typage · Partitionnement par date/faction"]:::process
+    ETL2["Spark — Silver vers Gold\nAgrégats par faction · Classements · Historique combats"]:::process
     SB["Spark SQL\nCalcul de classements & stats"]:::process
     Bronze[("Data Lake — Bronze\nHDFS/S3 · Raw Avro")]:::storage
     Silver[("Data Lake — Silver\nParquet · Partitionné · Curated")]:::storage
     Gold[("Data Lake — Gold\nParquet · Agrégats SQL-ready")]:::storage
-    Redis[("Redis\nÉtat Joueurs Actifs")]:::storage
+    Redis["Redis Pub/Sub\nRoutage des alertes"]:::process
     Push["Push Notification\nAlerte combat mobile"]:::process
     Mobile["App Mobile\nPropositions de combat"]:::process
     Dashboard["Dashboard Analytics\nStats factions · Historique"]:::process
@@ -76,13 +78,15 @@ flowchart TD
     Kafka -->|Consume| SS
     Kafka -->|Raw Data| Bronze
     Kafka -->|Consume| SB
-    SS --> Redis
-    SS --> Push
-    Bronze -->|ETL Spark| Silver
-    Silver --> Dashboard
+    SS -->|Détection proximité| Redis
+    Redis -->|Pub/Sub alerte| Push
+    Push --> Mobile
+    Bronze --> ETL1
+    ETL1 --> Silver
+    Silver --> ETL2
+    ETL2 --> Gold
     SB --> Gold
     Gold --> Dashboard
-    Redis --> Mobile
 
     classDef storage fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
     classDef process fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c

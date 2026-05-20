@@ -65,7 +65,6 @@ flowchart TD
     SS["Spark Streaming\nCalcul de proximité temps-réel"]:::process
     ETL1["Spark — Bronze vers Silver\nSuppression des doublons · Typage · Partitionnement par date/faction"]:::process
     ETL2["Spark — Silver vers Gold\nAgrégats par faction · Classements · Historique combats"]:::process
-    SB["Spark SQL\nCalcul de classements & stats"]:::process
     Bronze[("Data Lake — Bronze\nHDFS/S3 · Raw Avro")]:::storage
     Silver[("Data Lake — Silver\nParquet · Partitionné · Curated")]:::storage
     Gold[("Data Lake — Gold\nParquet · Agrégats SQL-ready")]:::storage
@@ -77,7 +76,6 @@ flowchart TD
     IoT -->|Avro msgs| Kafka
     Kafka -->|Consume| SS
     Kafka -->|Raw Data| Bronze
-    Kafka -->|Consume| SB
     SS -->|Détection proximité| Redis
     Redis -->|Pub/Sub alerte| Push
     Push --> Mobile
@@ -85,7 +83,6 @@ flowchart TD
     ETL1 --> Silver
     Silver --> ETL2
     ETL2 --> Gold
-    SB --> Gold
     Gold --> Dashboard
 
     classDef storage fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20

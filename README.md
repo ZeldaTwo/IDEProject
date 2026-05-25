@@ -60,7 +60,7 @@ flowchart TD
         ST{{"Flux (Stream)"}}:::stream
     end
 
-    IoT{{"Bracelets Connectés\nTS · ID · Lat/Lon · Faction · Status"}}:::stream
+    IoT["Bracelets Connectés IoT\nTS · ID · Lat/Lon · Faction · Status"]:::process
     Kafka{{"Apache Kafka\nTopic: positions · Partition: device_id"}}:::stream
     SS["Spark Streaming\nCalcul de proximité temps-réel"]:::process
     ETL1["Spark — Bronze vers Silver\nSuppression des doublons · Typage · Partitionnement par date/faction"]:::process
@@ -68,7 +68,7 @@ flowchart TD
     Bronze[("Data Lake — Bronze\nHDFS/S3 · Raw Avro")]:::storage
     Silver[("Data Lake — Silver\nParquet · Partitionné · Curated")]:::storage
     Gold[("Data Lake — Gold\nParquet · Agrégats SQL-ready")]:::storage
-    Redis["Redis Pub/Sub\nRoutage des alertes"]:::process
+    Redis{{"Redis Pub/Sub\nBus de messages · Fan-out"}}:::stream
     Push["Push Notification\nAlerte combat mobile"]:::process
     Mobile["App Mobile\nPropositions de combat"]:::process
     Dashboard["Dashboard Analytics\nStats factions · Historique"]:::process

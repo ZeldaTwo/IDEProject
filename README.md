@@ -45,10 +45,11 @@ Le service d'alerte doit :
 
 ## 2.b — Composant pour l'alerte
 
-**Redis** est utilisé comme canal de communication pour le service d'alerte, pour les raisons suivantes :
-- **Réactif**: Redis est un outil qui est très réactif. Il y a peu de délai.
-- **Pub/Sub natif** : Redis permet de publier une alerte sur un channel et de notifier tous les abonnés instantanément, idéal pour le fan-out
-- **AP par nature** : Redis privilégie la disponibilité, cohérent avec le choix AP pour les alertes
+**Spark Straming** est utilisé comme canal de communication pour le service d'alerte, pour les raisons suivantes :
+- **Réactif** : Il consomme Kafka en continu et calcul la proximité entre les joueurs.
+- **Fan-out natif** : Il peut comparer la position reçue entre n joueurs en parallèle grâce à son modèle qui est distribué.
+- **AP par nature** : Spark privilégie également la disponibilité, ce qui est cohérent avec le service d'alertes.
+- Il permet enfin de déclencher directement un appel au service de push notification qui permettra à l'application mobile de notifier les joueurs.
 
 ### Architecture complète du projet 
 
@@ -68,7 +69,6 @@ flowchart TD
     Bronze[("Data Lake — Bronze\nHDFS/S3 · Raw Avro")]:::storage
     Silver[("Data Lake — Silver\nParquet · Partitionné · Curated")]:::storage
     Gold[("Data Lake — Gold\nParquet · Agrégats SQL-ready")]:::storage
-    Redis{{"Redis Pub/Sub\nBus de messages · Fan-out"}}:::stream
     Push["Push Notification\nAlerte combat mobile"]:::process
     Mobile["App Mobile\nPropositions de combat"]:::process
     Dashboard["Dashboard Analytics\nStats factions · Historique"]:::process
@@ -76,8 +76,7 @@ flowchart TD
     IoT -->|Avro msgs| Kafka
     Kafka -->|Consume| SS
     Kafka -->|Raw Data| Bronze
-    SS -->|Détection proximité| Redis
-    Redis -->|Pub/Sub alerte| Push
+    SS -->|Détection proximité| Push
     Push --> Mobile
     Bronze --> ETL1
     ETL1 --> Silver

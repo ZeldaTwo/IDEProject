@@ -69,15 +69,19 @@ flowchart TD
     Bronze[("Data Lake — Bronze\nHDFS/S3 · Raw Avro")]:::storage
     Silver[("Data Lake — Silver\nParquet · Partitionné · Curated")]:::storage
     Gold[("Data Lake — Gold\nParquet · Agrégats SQL-ready")]:::storage
-    Push["Push Notification\nAlerte combat mobile"]:::process
-    Mobile["App Mobile\nPropositions de combat"]:::process
+    FCM["Firebase / FCM\nService push tiers"]:::process
+    Mobile["App Mobile\nReçoit alerte · saisit résultat"]:::process
+    API["Backend API\nReçoit et écrit résultats combat"]:::process
     Dashboard["Dashboard Analytics\nStats factions · Historique"]:::process
 
     IoT -->|Avro msgs| Kafka
     Kafka -->|Consume| SS
     Kafka -->|Raw Data| Bronze
-    SS -->|Détection proximité| Push
-    Push --> Mobile
+    SS -->|Détection proximité| FCM
+    SS -->|Événement combat| Bronze
+    FCM -->|Push alerte| Mobile
+    Mobile -->|Résultat combat| API
+    API -->|Écriture résultat| Bronze
     Bronze --> ETL1
     ETL1 --> Silver
     Silver --> ETL2

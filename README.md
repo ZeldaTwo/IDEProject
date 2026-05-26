@@ -76,8 +76,8 @@ flowchart TD
     Kafka -->|Consume| SS
     Kafka -->|Raw Data| Bronze
     SS -->|Détection proximité| Mobile
-    SS -->|Événement combat Avro(Position, Data, Faction_1, Faction_2)| Bronze
-    Mobile -->|Résultat combat Avro(Position, Date, Faction_win, Faction_loose)| Bronze
+    SS -->|"Événement combat Avro(Position, Data, Faction_1, Faction_2)"| Bronze
+    Mobile -->|"Résultat combat Avro(Position, Date, Faction_win, Faction_loose)"| Bronze
     Bronze --> ETL1
     ETL1 --> Silver
     Silver --> ETL2

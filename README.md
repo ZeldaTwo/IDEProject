@@ -63,6 +63,7 @@ flowchart TD
 
     IoT["Bracelets Connectés IoT\nTS - ID - Lat/Lon - Faction - Status"]:::process
     Kafka{{"Apache Kafka\nTopic: positions - Partition: device_id"}}:::stream
+    KafkaAlertes{{"Apache Kafka\nTopic: alertes_combat"}}:::stream
     SS["Spark Streaming\nCalcul de proximité temps-réel"]:::process
     ETL1["Spark — Bronze vers Silver\nSuppression des doublons - Typage - Partitionnement par date/faction"]:::process
     ETL2["Spark — Silver vers Gold\nAgrégats par faction - Classements - Historique combats"]:::process
@@ -71,7 +72,7 @@ flowchart TD
     Gold[("Data Lake — Gold\nParquet - Agrégats SQL-ready")]:::storage
     Mobile["App Mobile\nReçoit alerte - Saisit résultat"]:::process
     CombatDB[("BDD Opérationnelle\nPostgreSQL\nRésultats combats en attente")]:::storage
-    SparkDaily["Spark — Job Journalier\nLecture BDD - Conversion Avro · Purge BDD"]:::process
+    SparkWeekly["Spark — Job Hebdomadaire\nLecture BDD - Conversion Avro - Purge BDD"]:::process
     Dashboard["Dashboard Analytics\nStats factions - Historique"]:::process
     Spark["Spark\nRéception Raw Data - Renvoi vers Bronze"]:::process
 
@@ -79,10 +80,11 @@ flowchart TD
     Kafka -->|Consume| SS
     Kafka -->|Raw Data| Spark
     Spark -->|Raw Data| Bronze
-    SS -->|Détection proximité| Mobile
+    SS -->|Détection proximité| KafkaAlertes
+    KafkaAlertes -->|Consommation alerte| Mobile
     Mobile -->|"Résultat combat\n(Position, Date, Faction_win, Faction_loose)"| CombatDB
-    CombatDB -->|"Lecture batch journalier"| SparkDaily
-    SparkDaily -->|"Avro - Purge post-écriture"| Bronze
+    CombatDB -->|"Lecture batch journalier"| SparkWeekly
+    SparkWeekly -->|"Avro - Purge post-écriture"| Bronze
     Bronze --> ETL1
     ETL1 --> Silver
     Silver --> ETL2

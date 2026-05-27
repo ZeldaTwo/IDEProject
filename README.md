@@ -61,23 +61,28 @@ flowchart TD
         ST{{"Flux (Stream)"}}:::stream
     end
 
-    IoT["Bracelets Connectés IoT\nTS · ID · Lat/Lon · Faction · Status"]:::process
-    Kafka{{"Apache Kafka\nTopic: positions · Partition: device_id"}}:::stream
+    IoT["Bracelets Connectés IoT\nTS - ID - Lat/Lon - Faction - Status"]:::process
+    Kafka{{"Apache Kafka\nTopic: positions - Partition: device_id"}}:::stream
     SS["Spark Streaming\nCalcul de proximité temps-réel"]:::process
-    ETL1["Spark — Bronze vers Silver\nSuppression des doublons · Typage · Partitionnement par date/faction"]:::process
-    ETL2["Spark — Silver vers Gold\nAgrégats par faction · Classements · Historique combats"]:::process
-    Bronze[("Data Lake — Bronze\nHDFS/S3 · Raw Avro")]:::storage
-    Silver[("Data Lake — Silver\nParquet · Partitionné · Curated")]:::storage
-    Gold[("Data Lake — Gold\nParquet · Agrégats SQL-ready")]:::storage
-    Mobile["App Mobile\nReçoit alerte · saisit résultat"]:::process
-    Dashboard["Dashboard Analytics\nStats factions · Historique"]:::process
+    ETL1["Spark — Bronze vers Silver\nSuppression des doublons - Typage - Partitionnement par date/faction"]:::process
+    ETL2["Spark — Silver vers Gold\nAgrégats par faction - Classements - Historique combats"]:::process
+    Bronze[("Data Lake — Bronze\nHDFS/S3 - Raw Avro")]:::storage
+    Silver[("Data Lake — Silver\nParquet - Partitionné - Curated")]:::storage
+    Gold[("Data Lake — Gold\nParquet - Agrégats SQL-ready")]:::storage
+    Mobile["App Mobile\nReçoit alerte - Saisit résultat"]:::process
+    CombatDB[("BDD Opérationnelle\nPostgreSQL\nRésultats combats en attente")]:::storage
+    SparkWeekly["Spark — Job Hebdomadaire\nLecture BDD - Conversion Avro · Purge BDD"]:::process
+    Dashboard["Dashboard Analytics\nStats factions - Historique"]:::process
+    Spark["Spark\nRéception Raw Data - Renvoi vers Bronze"]:::process
 
     IoT -->|Avro msgs| Kafka
     Kafka -->|Consume| SS
-    Kafka -->|Raw Data| Bronze
+    Kafka -->|Raw Data| Spark
+    Spark -->|Raw Data| Bronze
     SS -->|Détection proximité| Mobile
-    SS -->|"Événement combat Avro(Position, Data, Faction_1, Faction_2)"| Bronze
-    Mobile -->|"Résultat combat Avro(Position, Date, Faction_win, Faction_loose)"| Bronze
+    Mobile -->|"Résultat combat\n(Position, Date, Faction_win, Faction_loose)"| CombatDB
+    CombatDB -->|"Lecture batch journalier"| SparkWeekly
+    SparkWeekly -->|"Avro - Purge post-écriture"| Bronze
     Bronze --> ETL1
     ETL1 --> Silver
     Silver --> ETL2

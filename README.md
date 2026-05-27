@@ -71,7 +71,7 @@ flowchart TD
     Gold[("Data Lake — Gold\nParquet - Agrégats SQL-ready")]:::storage
     Mobile["App Mobile\nReçoit alerte - Saisit résultat"]:::process
     CombatDB[("BDD Opérationnelle\nPostgreSQL\nRésultats combats en attente")]:::storage
-    SparkWeekly["Spark — Job Hebdomadaire\nLecture BDD - Conversion Avro · Purge BDD"]:::process
+    SparkDaily["Spark — Job Journalier\nLecture BDD - Conversion Avro · Purge BDD"]:::process
     Dashboard["Dashboard Analytics\nStats factions - Historique"]:::process
     Spark["Spark\nRéception Raw Data - Renvoi vers Bronze"]:::process
 
@@ -81,8 +81,8 @@ flowchart TD
     Spark -->|Raw Data| Bronze
     SS -->|Détection proximité| Mobile
     Mobile -->|"Résultat combat\n(Position, Date, Faction_win, Faction_loose)"| CombatDB
-    CombatDB -->|"Lecture batch journalier"| SparkWeekly
-    SparkWeekly -->|"Avro - Purge post-écriture"| Bronze
+    CombatDB -->|"Lecture batch journalier"| SparkDaily
+    SparkDaily -->|"Avro - Purge post-écriture"| Bronze
     Bronze --> ETL1
     ETL1 --> Silver
     Silver --> ETL2

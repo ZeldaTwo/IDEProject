@@ -1,0 +1,15 @@
+# sbt / Scala
+target/
+project/target/
+project/project/
+.bsp/
+.metals/
+.bloop/
+
+# data lake produced locally
+datalake/
+
+# logs / editors
+*.log
+.idea/
+.vscode/

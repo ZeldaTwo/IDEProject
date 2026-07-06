@@ -75,7 +75,7 @@ object Main {
       .format("kafka")
       .option("kafka.bootstrap.servers", bootstrap)
       .option("subscribe", positions)
-      .option("startingOffsets", "latest")
+      .option("startingOffsets", "earliest")
       .load()
       .select(from_json(col("value").cast(StringType), positionSchema).as("d"))
       .select(col("d.*"))

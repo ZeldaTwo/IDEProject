@@ -1,50 +1,56 @@
 package gftt.handler
 
-import io.circe.Decoder
-import io.circe.generic.semiauto.deriveDecoder
-import io.circe.parser.decode
-import org.apache.kafka.clients.consumer.KafkaConsumer
-
-import java.sql.Connection
-import java.sql.DriverManager
-import java.time.Duration
+import java.sql.{Connection, DriverManager, ResultSet}
 import scala.annotation.tailrec
-import scala.jdk.CollectionConverters._
 import scala.util.Using
 
-/** Component 3: second stream consumer. Reads the `alerts` topic, simulates the
-  * mobile push notification, resolves the fight and stores the result in the
-  * `combat_results` PostgreSQL table.
+/** Component 3: stands in for the mobile app. PoC simplification: instead of a
+  * push channel, it polls the `alerts` table (written by the alert detector)
+  * directly for new rows, simulates the push notification, resolves the fight
+  * and stores the result in the `combat_results` table.
   */
-  
 object Main {
-
-  implicit val alertDecoder: Decoder[Alert] = deriveDecoder[Alert]
-
-  private val bootstrap   = sys.env.getOrElse("KAFKA_BOOTSTRAP", "localhost:9092")
-  private val alertsTopic = sys.env.getOrElse("ALERTS_TOPIC", "alerts")
 
   private val jdbcUrl  = sys.env.getOrElse("PG_URL", "jdbc:postgresql://localhost:5432/gftt")
   private val jdbcUser = sys.env.getOrElse("PG_USER", "gftt")
   private val jdbcPass = sys.env.getOrElse("PG_PASSWORD", "gftt")
+  private val pollMs   = sys.env.getOrElse("ALERT_POLL_MS", "2000").toLong
+
+  private val selectSql =
+    """SELECT id, ts, device_a, device_b, faction_a, faction_b, latitude, longitude, distance_m
+      |FROM alerts WHERE id > ? ORDER BY id ASC""".stripMargin
 
   private val insertSql =
     """INSERT INTO combat_results
       |(ts, device_a, device_b, winner_faction, loser_faction, latitude, longitude)
       |VALUES (?, ?, ?, ?, ?, ?, ?)""".stripMargin
 
-  private val consumerConfig: Map[String, AnyRef] = Map(
-    "bootstrap.servers"  -> bootstrap,
-    "group.id"           -> "alert-handler",
-    "key.deserializer"   -> "org.apache.kafka.common.serialization.StringDeserializer",
-    "value.deserializer" -> "org.apache.kafka.common.serialization.StringDeserializer",
-    "auto.offset.reset"  -> "earliest",
-    "enable.auto.commit" -> "false"
-  )
-
   /** Deterministic resolution (analysis pertinence does not matter here). */
   private def resolve(a: Alert): (String, String) =
     if (a.ts % 2 == 0) (a.faction_a, a.faction_b) else (a.faction_b, a.faction_a)
+
+  private def toAlert(rs: ResultSet): Alert =
+    Alert(
+      id = rs.getLong("id"),
+      ts = rs.getLong("ts"),
+      device_a = rs.getString("device_a"),
+      device_b = rs.getString("device_b"),
+      faction_a = rs.getString("faction_a"),
+      faction_b = rs.getString("faction_b"),
+      latitude = rs.getDouble("latitude"),
+      longitude = rs.getDouble("longitude"),
+      distance_m = rs.getDouble("distance_m")
+    )
+
+  @tailrec
+  private def readRows(rs: ResultSet, acc: List[Alert]): List[Alert] =
+    if (rs.next()) readRows(rs, toAlert(rs) :: acc) else acc.reverse
+
+  private def fetchNewAlerts(conn: Connection, lastId: Long): List[Alert] =
+    Using.resource(conn.prepareStatement(selectSql)) { ps =>
+      ps.setLong(1, lastId)
+      Using.resource(ps.executeQuery())(readRows(_, Nil))
+    }
 
   private def persist(conn: Connection, a: Alert): Unit =
     Using.resource(conn.prepareStatement(insertSql)) { ps =>
@@ -62,25 +68,17 @@ object Main {
       ()
     }
 
+  @tailrec
+  private def loop(conn: Connection, lastId: Long): Unit = {
+    val newAlerts = fetchNewAlerts(conn, lastId)
+    newAlerts.foreach(persist(conn, _))
+    val nextId = newAlerts.map(_.id).foldLeft(lastId)(_ max _)
+    Thread.sleep(pollMs)
+    loop(conn, nextId)
+  }
+
   def main(args: Array[String]): Unit = {
-    val consumer = new KafkaConsumer[String, String](consumerConfig.asJava)
-    consumer.subscribe(java.util.List.of(alertsTopic))
-    sys.addShutdownHook(consumer.close())
-
-    @tailrec
-    def loop(conn: Connection, handled: Long): Unit = {
-      val records = consumer.poll(Duration.ofMillis(500))
-      val next = records.asScala.foldLeft(handled) { (acc, rec) =>
-        decode[Alert](rec.value()) match {
-          case Right(a) => persist(conn, a); acc + 1
-          case Left(e)  => println(s"[handler] skipped malformed alert: ${e.getMessage}"); acc
-        }
-      }
-      consumer.commitSync()
-      loop(conn, next)
-    }
-
-    println(s"[handler] consuming '$alertsTopic' from $bootstrap")
+    println(s"[handler] polling PostgreSQL 'alerts' table every ${pollMs}ms")
     Using.resource(DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPass)) { conn =>
       loop(conn, 0L)
     }

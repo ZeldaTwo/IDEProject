@@ -1,10 +1,10 @@
 package gftt.handler
 
-/** Alert message as published on the `alerts` Kafka topic by the detector.
-  * Field names match the JSON keys produced by Spark's `to_json`.
+/** Alert row as written by the alert detector into the PostgreSQL `alerts`
+  * table and polled by this component (standing in for the mobile app).
   */
-
 final case class Alert(
+    id: Long,
     ts: Long,
     device_a: String,
     device_b: String,

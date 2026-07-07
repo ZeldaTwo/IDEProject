@@ -5,17 +5,17 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
 /** Component 2: reads the `positions` stream, detects when two devices of
-  * opposite factions are close enough to trigger a fight, and publishes the
-  * alerts to (a) the `alerts` Kafka topic (consumed by the alert handler) and
-  * (b) the PostgreSQL operational DB (used by analytics / dashboard).
+  * opposite factions are close enough to trigger a fight, and writes the
+  * alerts to the PostgreSQL operational DB only (the mobile app reads them
+  * straight from there; alerts are later archived to the lake by the weekly
+  * job, then read by analytics / dashboard).
   */
 object Main {
 
   private val bootstrap    = sys.env.getOrElse("KAFKA_BOOTSTRAP", "localhost:9092")
   private val positions    = sys.env.getOrElse("POSITIONS_TOPIC", "positions")
-  private val alertsTopic  = sys.env.getOrElse("ALERTS_TOPIC", "alerts")
   private val thresholdM   = sys.env.getOrElse("ALERT_DISTANCE_M", "50").toDouble
-  private val lake         = sys.env.getOrElse("DATA_LAKE", "./datalake")
+  private val lake         = sys.env.getOrElse("DATA_LAKE", "hdfs://localhost:9000/gftt/datalake")
 
   private val jdbcUrl  = sys.env.getOrElse("PG_URL", "jdbc:postgresql://localhost:5432/gftt")
   private val jdbcUser = sys.env.getOrElse("PG_USER", "gftt")
@@ -85,13 +85,6 @@ object Main {
       .foreachBatch { (batch: DataFrame, _: Long) =>
         val alerts = alertsOf(batch).persist()
         val n = alerts.count()
-
-        alerts
-          .select(to_json(struct(alerts.columns.map(col): _*)).as("value"))
-          .write.format("kafka")
-          .option("kafka.bootstrap.servers", bootstrap)
-          .option("topic", alertsTopic)
-          .save()
 
         alerts.write.format("jdbc")
           .option("url", jdbcUrl)

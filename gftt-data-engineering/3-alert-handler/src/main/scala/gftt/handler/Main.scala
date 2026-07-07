@@ -23,7 +23,7 @@ object Main {
       |(ts, device_a, device_b, winner_faction, loser_faction, latitude, longitude)
       |VALUES (?, ?, ?, ?, ?, ?, ?)""".stripMargin
 
-  /** Deterministic resolution (analysis pertinence does not matter here). */
+  /** Deterministic resolution */
   private def resolve(a: Alert): (String, String) =
     if (a.ts % 2 == 0) (a.faction_a, a.faction_b) else (a.faction_b, a.faction_a)
 

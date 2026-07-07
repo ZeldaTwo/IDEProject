@@ -7,11 +7,7 @@ import org.apache.spark.sql.types.TimestampType
 /** The "SparkWeekly" component of the architecture: a periodic (weekly) batch
   * job that reads the operational PostgreSQL tables, archives them as Avro into
   * the Bronze zone of the data lake, then purges the tables so the operational
-  * DB stays small. Pure DataFrame API + Spark JDBC: the purge relies on Spark's
-  * `truncate` option, so no SQL statement is hand-written.
-  *
-  * Note: stop (or pause) the streaming components before running this, so no row
-  * is inserted between the archive read and the truncate.
+  * DB stays small.
   */
 object Main {
 
@@ -35,7 +31,7 @@ object Main {
     ()
   }
 
-  /** Empty the table while keeping its schema (TRUNCATE, not DROP). */
+  /** Empty the table while keeping its schema. */
   private def purge(df: DataFrame, table: String): Unit = {
     df.limit(0).write.format("jdbc")
       .option("url", jdbcUrl)

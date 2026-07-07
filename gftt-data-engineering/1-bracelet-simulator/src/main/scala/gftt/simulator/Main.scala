@@ -19,10 +19,10 @@ object Main {
   private val bootstrap  = sys.env.getOrElse("KAFKA_BOOTSTRAP", "localhost:9092")
   private val topic      = sys.env.getOrElse("POSITIONS_TOPIC", "positions")
   private val nbDevices  = sys.env.getOrElse("NB_DEVICES", "40").toInt
-  private val intervalMs = sys.env.getOrElse("INTERVAL_MS", "1000").toLong
+  private val intervalMs = sys.env.getOrElse("INTERVAL_MS", "15000").toLong
 
-  // environnmments vals for factions
-  private val factions  = Vector("RED", "BLUE")
+  // simulation constants: factions and the play-area geography
+  private val factions  = Vector("GAUCHE", "DROITE", "CENTRE", "EXTREME GAUCHE", "EXTREME DROITE")
   private val centerLat = 48.8566 // Paris
   private val centerLon = 2.3522
   private val spread    = 0.01    // 1 km initial spread

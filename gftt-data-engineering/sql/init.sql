@@ -1,3 +1,6 @@
+-- Operational database for the Global Fighting Guild Tournament.
+-- Run once against the `gftt` database (see SETUP.md).
+
 CREATE TABLE IF NOT EXISTS alerts (
     id          BIGSERIAL PRIMARY KEY,
     ts          BIGINT           NOT NULL,

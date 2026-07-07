@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GFTT — Dashboard Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="data.js"></script>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px;
+           background: #0f1117; color: #e8eaed; }
+    h1 { margin: 0 0 4px; font-size: 22px; }
+    p.sub { margin: 0 0 24px; color: #9aa0a6; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px; }
+    .card { background: #1a1d27; border: 1px solid #2a2f3a; border-radius: 12px;
+            padding: 16px; }
+    .card h2 { margin: 0 0 12px; font-size: 15px; color: #c8ccd4; font-weight: 600; }
+    .empty { color: #9aa0a6; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>Global Fighting Guild Tournament</h1>
+  <p class="sub">Dashboard Analytics — lecture de la zone Gold du data lake</p>
+
+  <div class="grid">
+    <div class="card"><h2>Positions par faction (total)</h2><canvas id="factions"></canvas></div>
+    <div class="card"><h2>Classement des factions (victoires)</h2><canvas id="ranking"></canvas></div>
+    <div class="card"><h2>Appareils actifs par heure</h2><canvas id="hours"></canvas></div>
+    <div class="card"><h2>Volume semaine vs week-end</h2><canvas id="daytype"></canvas></div>
+  </div>
+
+  <script>
+    const G = window.GOLD || {};
+    const palette = ["#7b5cff", "#ff5c8a", "#2ec4b6", "#ffb703", "#00b4d8"];
+
+    function guard(id, rows) {
+      if (rows && rows.length) return true;
+      const c = document.getElementById(id);
+      const msg = document.createElement("p");
+      msg.className = "empty";
+      msg.textContent = "Aucune donnée — lancez le pipeline (6-gold-etl régénère data.js).";
+      c.replaceWith(msg);
+      return false;
+    }
+
+    if (guard("factions", G.positions_per_faction)) {
+      new Chart(document.getElementById("factions"), {
+        type: "bar",
+        data: { labels: G.positions_per_faction.map(r => r.faction),
+                datasets: [{ label: "positions",
+                  data: G.positions_per_faction.map(r => r.total_positions),
+                  backgroundColor: palette }] },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    if (guard("ranking", G.faction_ranking)) {
+      new Chart(document.getElementById("ranking"), {
+        type: "bar",
+        data: { labels: G.faction_ranking.map(r => r.winner_faction),
+                datasets: [{ label: "victoires",
+                  data: G.faction_ranking.map(r => r.nb_wins),
+                  backgroundColor: palette }] },
+        options: { indexAxis: "y", plugins: { legend: { display: false } } }
+      });
+    }
+
+    if (guard("hours", G.activity_per_hour)) {
+      new Chart(document.getElementById("hours"), {
+        type: "line",
+        data: { labels: G.activity_per_hour.map(r => r.hour),
+                datasets: [{ label: "appareils actifs",
+                  data: G.activity_per_hour.map(r => r.active_devices),
+                  borderColor: palette[0], backgroundColor: palette[0], tension: 0.3 }] }
+      });
+    }
+
+    if (guard("daytype", G.volume_by_day_type)) {
+      new Chart(document.getElementById("daytype"), {
+        type: "doughnut",
+        data: { labels: G.volume_by_day_type.map(r => r.is_weekend ? "week-end" : "semaine"),
+                datasets: [{ data: G.volume_by_day_type.map(r => r.nb_positions),
+                  backgroundColor: [palette[2], palette[1]] }] }
+      });
+    }
+  </script>
+</body>
+</html>

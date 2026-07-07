@@ -4,7 +4,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
-/** Component 5 of the subject (analysis). Reads the curated Silver/Gold zones of
+/** Component 7 of the subject (analysis). Reads the curated Silver/Gold zones of
   * the data lake and answers 4 questions with the DataFrame API only. Alerts/combats come from the lake (archived by the weekly job),
   * so this runs fully decoupled from the operational database.
   */

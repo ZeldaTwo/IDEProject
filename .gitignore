@@ -13,3 +13,4 @@ datalake/
 *.log
 .idea/
 .vscode/
+**/*.Zone.Identifier

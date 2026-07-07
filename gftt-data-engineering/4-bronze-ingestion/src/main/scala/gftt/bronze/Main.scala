@@ -6,10 +6,6 @@ import org.apache.spark.sql.types.StringType
 
 /** Component 4 (data lake layer 1): consumes the `positions` stream and stores
   * the raw Kafka messages, untouched, in the Bronze zone of the data lake.
-  *
-  * No parsing happens here: schema-on-read is deferred to the Silver ETL. We
-  * keep the original payload plus the Kafka metadata (key, topic, partition,
-  * offset, timestamp) so nothing is ever lost, even on malformed messages.
   */
 object Main {
 

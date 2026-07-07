@@ -7,9 +7,8 @@ import org.apache.spark.sql.functions._
 
 /** Component 6 (data lake layer 3): batch job that builds the Gold zone, i.e.
   * business-ready aggregates for the dashboard: per-faction stats, faction
-  * ranking and combat history. Pure DataFrame API (no Spark SQL strings). It
-  * also exports the (small) tables as a `data.js` file consumed by the static
-  * dashboard.
+  * ranking and combat history. Pure DataFrame API. It 
+  * also exports the tables as a `data.js` file consumed by the static dashboard.
   */
 object Main {
 

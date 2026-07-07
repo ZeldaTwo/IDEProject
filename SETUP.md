@@ -1,16 +1,14 @@
 # SETUP — Global Fighting Guild Tournament PoC
 
-End-to-end local setup. No Docker (as recommended). Everything runs on one
-machine; each component is a standalone sbt project (`sbt run`).
+End-to-end local setup.
 
 ## 0. Prerequisites
 
-- **JDK 11 or 17** (JDK 11 is the smoothest with Spark 3.5; the `build.sbt`
-  files already add the `--add-opens` flags needed for JDK 17)
-- **sbt 1.10.x** — https://www.scala-sbt.org/download
-- **Apache Kafka 3.7.x** (KRaft mode, no ZooKeeper)
+- **JDK 11 or 17**
+- **sbt 1.10.x**
+- **Apache Kafka 3.7.x**
 - **PostgreSQL 14+**
-- **Apache Hadoop 3.3.x** (HDFS, single-node/pseudo-distributed) — backs the data lake
+- **Apache Hadoop 3.3.x**
 
 Check versions:
 
@@ -59,10 +57,6 @@ bin/kafka-topics.sh --create --topic positions \
 # check
 bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 ```
-
-> There is no `alerts` Kafka topic: the alert detector (2) only writes alerts to
-> PostgreSQL, and the alert handler (3), standing in for the mobile app, reads
-> them straight from there.
 
 Handy debug command:
 
@@ -115,8 +109,7 @@ PGPASSWORD=gftt psql -h localhost -U gftt -d gftt -c "\dt"
 
 ## 3. Data lake (distributed storage)
 
-The data lake is backed by **HDFS**, shared by all components (Spark ships with
-the Hadoop client needed to talk to `hdfs://`, no extra dependency required).
+The data lake is backed by **HDFS**, shared by all components
 
 ### Install (single-node / pseudo-distributed)
 
@@ -151,7 +144,7 @@ Configure `etc/hadoop/core-site.xml` with the namenode address:
 bin/hdfs namenode -format
 ```
 
-`sbin/start-dfs.sh` starts the daemons over SSH — even for a single local node —
+`sbin/start-dfs.sh` starts the daemons over SSH
 so it fails with `Connection refused` unless an SSH server is running and
 passwordless `ssh localhost` is set up. For a single-machine PoC, skip SSH
 entirely and start each daemon directly instead:
@@ -278,7 +271,7 @@ bin/kafka-topics.sh --delete --topic positions --bootstrap-server localhost:9092
 
 ---
 
-## 7. Notes on scalability (for the presentation)
+## 7. Notes on scalability
 
 - **Kafka**: `positions` keyed by `device_id` over 6 partitions → consumers scale
   horizontally by adding instances to the same consumer group.

@@ -6,9 +6,7 @@ import org.apache.spark.sql.types._
 
 /** Component 2: reads the `positions` stream, detects when two devices of
   * opposite factions are close enough to trigger a fight, and writes the
-  * alerts to the PostgreSQL operational DB only (the mobile app reads them
-  * straight from there; alerts are later archived to the lake by the weekly
-  * job, then read by analytics / dashboard).
+  * alerts to the PostgreSQL operational DB only.
   */
 object Main {
 

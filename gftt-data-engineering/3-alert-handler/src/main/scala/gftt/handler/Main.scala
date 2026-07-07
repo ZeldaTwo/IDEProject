@@ -4,10 +4,8 @@ import java.sql.{Connection, DriverManager, ResultSet}
 import scala.annotation.tailrec
 import scala.util.Using
 
-/** Component 3: stands in for the mobile app. PoC simplification: instead of a
-  * push channel, it polls the `alerts` table (written by the alert detector)
-  * directly for new rows, simulates the push notification, resolves the fight
-  * and stores the result in the `combat_results` table.
+/** Component 3: stands in for the mobile app. Writes the results of fights to 
+  * the PostgreSQL `combat_results` table
   */
 object Main {
 

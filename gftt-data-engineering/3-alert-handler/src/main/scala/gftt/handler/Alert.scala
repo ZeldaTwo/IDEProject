@@ -1,7 +1,7 @@
 package gftt.handler
 
 /** Alert row as written by the alert detector into the PostgreSQL `alerts`
-  * table and polled by this component (standing in for the mobile app).
+  * table and polled by this component.
   */
 final case class Alert(
     id: Long,
